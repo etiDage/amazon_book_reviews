@@ -2,14 +2,14 @@ from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import winsound
+import constantes
 
 # _data = pd.read_json('P:/Cours/IFT599 - IFT799/Travaux pratiques/Données/ABR.json.gz', lines=True, chunksize=100, compression='gzip')
 
 
 pd.DataFrame()
 
-_dataJSON = pd.read_json('C:/Users/giga0601/Desktop/ABR.json', lines=True, orient='records',\
+_dataJSON = pd.read_json(constantes.ABR_PATH, lines=True, orient='records',\
       chunksize=28, nrows=10000, typ='frame')
 #      chunksize=28, typ='frame')
 
@@ -45,12 +45,45 @@ moyennes = dict().fromkeys(livres)
 
 reviewsFiltres = dataF.filter(axis=1, items=['asin', 'overall'])
 moyennes = reviewsFiltres.groupby(by=['asin']).mean()
+test = reviewsFiltres.groupby(by=['asin']).value_counts()
+
+scores = pd.DataFrame([], columns=[], index=[1, 2, 3, 4, 5] )
+
+def buildScores(row):
+      score = np.zeros(5)
+      def buildScore(note): 
+            score[note - 1] += 1
+      row['overall'].apply(buildScore)
+
+      scores.insert(len(scores.columns), row['asin'].iloc[0], score)
+
+reviewsFiltres.groupby(by=['asin']).apply(buildScores)
+print("_____________________SCORES_________________________")
+print(scores)
 # [ 43 20 16 56 ... ]
 # q[]
+# mu_score = np.zeros(5)
+# def calculateMuScore(row):
+#       mu_score[row.name - 1] = row.mean()
+# scores.apply(calculateMuScore, axis=1)
+# print("MU SCORE:")
+# print(mu_score)
 
-
+scores_cov = scores.cov()
+print("SCORES_COV")
+print(scores_cov)
 # b) 
 # 1.
+
+# Construction de la matrice des scores 
+# On veut:
+#     | Livre 1 | Livre 2 | Livre 3 | Livre 4 |
+# 1         3           4
+# 2         4           3
+# 3         2           2
+# 4         1           8
+# 5         0           12
+
 
 # 2.
 print(frequences)
@@ -65,7 +98,6 @@ print(scores)
 # BEEP! Display is ready!
 frequency = 397  # Set Frequency To 2500 Hertz
 duration = 250  # Set Duration To 1000 ms == 1 second
-winsound.Beep(frequency, duration)
 
 # pd.DataFrame(data=scores).plot(kind='hist',
 #         alpha=0.8,

@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import Counter
 import random as rand
+import constantes
 
-import winsound
+# import winsound
 
-_dataJSON = pd.read_json('C:/Users/giga0601/Desktop/ABR.json', lines=True, orient='records',\
-       chunksize=28, nrows=10000, typ='frame')
+_dataJSON = pd.read_json(constantes.ABR_PATH, lines=True, orient='records',\
+       chunksize=28, nrows=20000, typ='frame')
     #  chunksize=28, typ='frame')
 
 dataF = pd.DataFrame(data=_dataJSON.read())
