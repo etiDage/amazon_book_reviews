@@ -1,4 +1,5 @@
 from collections import Counter
+from tabnanny import process_tokens
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,6 +48,20 @@ reviewsFiltres = dataF.filter(axis=1, items=['asin', 'overall'])
 moyennes = reviewsFiltres.groupby(by=['asin']).mean()
 test = reviewsFiltres.groupby(by=['asin']).value_counts()
 
+
+
+# b) 
+# 1.
+
+# Construction de la matrice des scores 
+# On veut:
+#     | Livre 1 | Livre 2 | Livre 3 | Livre 4 |
+# 1         3           4
+# 2         4           3
+# 3         2           2
+# 4         1           8
+# 5         0           12
+
 scores = pd.DataFrame([], columns=[], index=[1, 2, 3, 4, 5] )
 
 def buildScores(row):
@@ -60,30 +75,44 @@ def buildScores(row):
 reviewsFiltres.groupby(by=['asin']).apply(buildScores)
 print("_____________________SCORES_________________________")
 print(scores)
-# [ 43 20 16 56 ... ]
-# q[]
-# mu_score = np.zeros(5)
-# def calculateMuScore(row):
-#       mu_score[row.name - 1] = row.mean()
-# scores.apply(calculateMuScore, axis=1)
-# print("MU SCORE:")
-# print(mu_score)
 
-scores_cov = scores.cov()
-print("SCORES_COV")
-print(scores_cov)
-# b) 
-# 1.
+scores_np = scores.to_numpy()
+scores_cov_np = np.cov(scores_np)
 
-# Construction de la matrice des scores 
-# On veut:
-#     | Livre 1 | Livre 2 | Livre 3 | Livre 4 |
-# 1         3           4
-# 2         4           3
-# 3         2           2
-# 4         1           8
-# 5         0           12
+eig_values, eig_vectors = np.linalg.eig(scores_cov_np)
+sorted_eig_values = np.sort(eig_values)
 
+index_of_vp1, = np.where(np.isclose(eig_values, sorted_eig_values[-1]))[0]
+index_of_vp2, = np.where(np.isclose(eig_values, sorted_eig_values[-2]))[0]
+
+vp1 = eig_vectors[index_of_vp1]
+vp1 = vp1 / np.linalg.norm(vp1)
+vp2 = eig_vectors[index_of_vp2]
+vp2 = vp2 / np.linalg.norm(vp2)
+
+projection = pd.DataFrame([], columns=[], index=['x', 'y'])
+
+mean_v = scores.mean(axis=1).to_numpy()
+
+def buildProjectionDataFrame(col):
+      col_np = col.to_numpy()
+      x = np.dot((col_np - mean_v), vp1)
+      y = np.dot((col_np - mean_v), vp2)
+      projection.insert(len(projection.columns), col.name, [x, y])
+
+scores.apply(buildProjectionDataFrame)
+
+
+projection_t = projection.transpose()
+
+
+# Filter 
+outlier_x_indexes = projection_t[projection_t['x'] < -50].index
+projection_t.drop(outlier_x_indexes, inplace=True)
+outlier_y_indexes = projection_t[projection_t['y'] < -25].index
+projection_t.drop(outlier_y_indexes, inplace=True)
+
+projection_t.plot.scatter('x', 'y')
 
 # 2.
 print(frequences)
