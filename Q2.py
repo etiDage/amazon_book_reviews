@@ -1,41 +1,16 @@
 from collections import Counter
+import re
 from tabnanny import process_tokens
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import constantes
 
-# _data = pd.read_json('P:/Cours/IFT599 - IFT799/Travaux pratiques/Données/ABR.json.gz', lines=True, chunksize=100, compression='gzip')
-
-
-pd.DataFrame()
-
 _dataJSON = pd.read_json(constantes.ABR_PATH, lines=True, orient='records',\
       chunksize=28, nrows=10000, typ='frame')
-#      chunksize=28, typ='frame')
 
-# print(_dataJSON)
-
-# dataF = pd.DataFrame(data=_dataJSON.read(), columns=[], dtype=[str,int,str,[],str,np.float32,str,int,str])
 dataF = pd.DataFrame(data=_dataJSON.read())
-# print(dataF)
 dataF.info()
-
-# dataF.hist(column='overall', bins=5)
-
-
-# dataF['overall'].plot(kind='hist',
-#         alpha=0.8,
-#         bins=5,
-#         title='Impression des livres',
-#         rot=45,
-#         grid=True,
-#         figsize=(12,8),
-#         fontsize=15, 
-#         color=['#A0E8AF'])
-
-# plt.xlabel('Score')
-# plt.ylabel("Fréquence")
 
 cnt = Counter(dataF['asin'])
 livres = cnt.keys()
@@ -47,11 +22,8 @@ moyennes = dict().fromkeys(livres)
 reviewsFiltres = dataF.filter(axis=1, items=['asin', 'overall'])
 moyennes = reviewsFiltres.groupby(by=['asin']).mean()
 test = reviewsFiltres.groupby(by=['asin']).value_counts()
-
-
-
 # b) 
-# 1.
+# 1.------------------------------------------------------------------
 
 # Construction de la matrice des scores 
 # On veut:
@@ -73,8 +45,7 @@ def buildScores(row):
       scores.insert(len(scores.columns), row['asin'].iloc[0], score)
 
 reviewsFiltres.groupby(by=['asin']).apply(buildScores)
-print("_____________________SCORES_________________________")
-print(scores)
+
 
 scores_np = scores.to_numpy()
 scores_cov_np = np.cov(scores_np)
@@ -85,19 +56,17 @@ sorted_eig_values = np.sort(eig_values)
 index_of_vp1, = np.where(np.isclose(eig_values, sorted_eig_values[-1]))[0]
 index_of_vp2, = np.where(np.isclose(eig_values, sorted_eig_values[-2]))[0]
 
-vp1 = eig_vectors[index_of_vp1]
-vp1 = vp1 / np.linalg.norm(vp1)
-vp2 = eig_vectors[index_of_vp2]
-vp2 = vp2 / np.linalg.norm(vp2)
+vp1 = eig_vectors[index_of_vp1] / np.linalg.norm(eig_vectors[index_of_vp1])
+vp2 = eig_vectors[index_of_vp2] / np.linalg.norm(eig_vectors[index_of_vp2])
 
 projection = pd.DataFrame([], columns=[], index=['x', 'y'])
 
 mean_v = scores.mean(axis=1).to_numpy()
 
 def buildProjectionDataFrame(col):
-      col_np = col.to_numpy()
-      x = np.dot((col_np - mean_v), vp1)
-      y = np.dot((col_np - mean_v), vp2)
+      col_np = col.to_numpy() - mean_v
+      x = np.dot(vp1, col_np)
+      y = np.dot(vp2, col_np)
       projection.insert(len(projection.columns), col.name, [x, y])
 
 scores.apply(buildProjectionDataFrame)
@@ -105,16 +74,56 @@ scores.apply(buildProjectionDataFrame)
 
 projection_t = projection.transpose()
 
-
-# Filter 
-outlier_x_indexes = projection_t[projection_t['x'] < -50].index
-projection_t.drop(outlier_x_indexes, inplace=True)
-outlier_y_indexes = projection_t[projection_t['y'] < -25].index
-projection_t.drop(outlier_y_indexes, inplace=True)
-
 projection_t.plot.scatter('x', 'y')
 
-# 2.
+
+# 2. --------------------------------------------------------------------
+# Moyenne pondere pour chaque livres
+scores_t = scores.transpose()
+moy_p = 0
+
+for i in range(1, 6):  
+      moy_p += scores_t[i] * i
+
+moy_p = moy_p / scores.sum()
+
+scores_t.insert(len(scores_t.columns), 'moy_p', moy_p)
+
+### Algo from https://math.stackexchange.com/questions/942738/algorithm-to-calculate-rating-based-on-multiple-reviews-using-both-review-score
+# Adapted score
+nbReviewsForEachBook = scores.sum().to_numpy()
+moyNbReviews = np.mean(nbReviewsForEachBook)
+Q = -moyNbReviews/np.log(1.0/2.0)
+ponderation = 2.5 * (np.ones_like(nbReviewsForEachBook) - np.exp(-nbReviewsForEachBook/Q))
+adapted_scores = (moy_p * 0.5) + ponderation 
+
+scores_t.insert(len(scores_t.columns), 'a_score', adapted_scores)
+print("--------------------------SCORES_T---------------------------")
+print(scores_t)
+
+def chooseColor(a_score):
+      if a_score < 2.5:
+            return "red"
+      elif a_score > 3.5:
+            return "green"
+      else:
+            return "blue"
+
+color_scheme = scores_t['a_score'].apply(chooseColor)
+
+projection_t.insert(len(projection_t.columns), 'color', color_scheme)
+
+moy_color = projection_t.groupby(by=['color']).mean()
+
+projection_t.insert(len(projection_t.columns), 'size', np.ones(len(projection_t)) * 20)
+
+projection_t.loc[len(projection_t)] = [moy_color.loc['blue']['x'], moy_color.loc['blue']['y'], 'yellow', 50]
+projection_t.loc[len(projection_t)] = [moy_color.loc['red']['x'], moy_color.loc['red']['y'], 'yellow', 50]
+projection_t.loc[len(projection_t)] = [moy_color.loc['green']['x'], moy_color.loc['green']['y'], 'yellow', 50]
+
+projection_t.plot.scatter('x', 'y', c='color', s='size')
+
+# Histogramme --------------------------------------------------------
 print(frequences)
 moyNbReviews = np.mean(freqList)
 Q = -moyNbReviews/np.log(1.0/2.0)
@@ -127,19 +136,6 @@ print(scores)
 # BEEP! Display is ready!
 frequency = 397  # Set Frequency To 2500 Hertz
 duration = 250  # Set Duration To 1000 ms == 1 second
-
-# pd.DataFrame(data=scores).plot(kind='hist',
-#         alpha=0.8,
-#         bins=5,
-#         title='Impression des livres',
-#         rot=45,
-#         grid=True,
-#         figsize=(12,8),
-#         fontsize=15, 
-#         color=['#A0E8AF'])
-
-# plt.xlabel('Score')
-# plt.ylabel("Fréquence")
 
 cntBas = len(scores[scores < 2.5])
 cntMil = len(scores[(scores > 2.5) & (scores < 3.5)])
