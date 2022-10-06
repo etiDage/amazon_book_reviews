@@ -49,7 +49,34 @@ print("________________SCORE_FOR_MONTH____________________")
 print(monthlyScores[0])
 months_counter = 1
 
+monthlyProjections = []
+
+
 for monthScores in monthlyScores:
+      ### PROJECTION
+      mean_v = monthScores.mean().to_numpy()
+      month_scores_cov_np = monthScores.cov().to_numpy()
+
+      eig_values, eig_vectors = np.linalg.eig(month_scores_cov_np)
+      sorted_eig_values = np.sort(eig_values)
+
+      index_of_vp1, = np.where(np.isclose(eig_values, sorted_eig_values[-1]))[0]
+      index_of_vp2, = np.where(np.isclose(eig_values, sorted_eig_values[-2]))[0]
+
+      vp1 = eig_vectors[index_of_vp1] / np.linalg.norm(eig_vectors[index_of_vp1])
+      vp2 = eig_vectors[index_of_vp2] / np.linalg.norm(eig_vectors[index_of_vp2])
+
+      month_projection = pd.DataFrame([], columns=[], index=['x', 'y'])
+
+      def buildProjectionDataFrame(col): 
+            col_np = col.to_numpy() - mean_v
+            x = np.dot(vp1, col_np)
+            y = np.dot(vp2, col_np)
+            month_projection.insert(len(month_projection.columns), col.name, [x, y])
+      
+      monthScores.apply(buildProjectionDataFrame, axis=1)
+
+      monthlyProjections.append(month_projection.transpose())
       ### Calcul moyenne ponderer par mois
       moy_p = 0
       for i in range(1, 6):
@@ -71,4 +98,8 @@ for monthScores in monthlyScores:
       print("_____Best_first_quarter_of_books_of_month_" + str(months_counter) + "_________")
       firstQuarterLimit = monthScores['moy_p'].quantile(q=0.75, interpolation="lower")
       print(monthScores.loc[monthScores['moy_p'] >= firstQuarterLimit])
+      
+      print("____Projection_on_principal_component_for_month_" + str(months_counter) + "______________")
+      print(month_projection.transpose())
+
       months_counter += 1
