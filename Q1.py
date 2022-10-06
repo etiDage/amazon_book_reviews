@@ -126,31 +126,6 @@ Cela vient palier au fait que les livres avec peu de reviews puissent facilement
 
 labelsVals = ['1)', '2)', '3)', '4)']
 ticksVals = np.array([1,2,3,4])
-# # plt.xticks(ticks=ticksVals, labels=labelsVals)
-
-# plt1 = moyClassee.plot(kind="box", xlabel='1)', xticks=ticksVals, sharex=True)
-# plt1.set_xticks(ticksVals-1)
-# plt.xticks(ticks=[], labels=[])
-
-# plt2 = maxLivres.add(minLivres).plot(kind="box", xlabel='2)', xticks=ticksVals, ax = plt1, sharex=True)
-# plt2.set_xticks(ticksVals)
-# plt.xticks(ticks=[], labels=[])
-# # plt.xticks(ticks=ticksVals, labels=labelsVals)
-# # plt2.set_xticks(['2)'])
-# # plt2.set(xticks=ticks, xticklabels=labels)
-
-# plt3 = pd.DataFrame({'overall':[elt1moy, elt2moy]}).plot(kind="box", ax = plt2, xlabel='3)', xticks=ticksVals, sharex=True)
-# plt3.set_xticks(ticksVals+1)
-# plt.xticks(ticks=[], labels=[])
-# # plt3.set(xticks=ticks, xticklabels=labels)
-# # plusApprecies.plot.box(rot=0, color='purple')
-
-#########################################################
-
-# dataNo2 = pd.concat(minLivres['overall'], maxLivres['overall'])
-# concatMinMax = np.array(list(minLivres['overall'].values) + list(maxLivres['overall'].values))
-# concatMinMaxAsin = np.array(list(minLivres['overall'].values) + list(maxLivres['overall'].values))
-# print(concatMinMax)
 concatMinMax = minLivres['overall'] + maxLivres['overall']
 print(concatMinMax)
 
@@ -188,23 +163,11 @@ plt4 = plotData.plot(kind='box',
         )
 
 plt4.set_xticks(ticksVals)
-# plt4.set(xticks=ticks, xticklabels=labels)
-        # color=['#E098AF', '#54F632', '#3285F9'])
 
-# plusApprecies.plot(kind='box',
-#         title='Étendue des livres',
-#         rot=45,
-#         grid=True,
-#         figsize=(12,8),
-#         fontsize=15,
-#         ax=plt2,
-#         color=['#E098AF', '#54F632', '#3285F9'])
-
-# plt.xlabel('')
 plt.ylabel("Valeur")
 plt.Color = (0.2,0.8,0.6)
 
-# plt.xticks(ticks=[0,1,2,3], labels=labelsVals)
+########################################
 
 # BEEP! Display is ready!
 # frequency = 397  # Set Frequency To 2500 Hertz

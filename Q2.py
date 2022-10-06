@@ -19,9 +19,10 @@ freqList = np.array(list(cnt.values()))
 
 moyennes = dict().fromkeys(livres)
 
-reviewsFiltres = dataF.filter(axis=1, items=['asin', 'overall'])
+reviewsFiltres = dataF.filter(axis=1, items=['asin', 'overall', 'reviewTime'])
 moyennes = reviewsFiltres.groupby(by=['asin']).mean()
 test = reviewsFiltres.groupby(by=['asin']).value_counts()
+
 # b) 
 # 1.------------------------------------------------------------------
 
@@ -35,6 +36,15 @@ test = reviewsFiltres.groupby(by=['asin']).value_counts()
 # 5         0           12
 
 scores = pd.DataFrame([], columns=[], index=[1, 2, 3, 4, 5] )
+# avg = pd.DataFrame([], columns=[], index=[1, 2, 3, 4, 5] )
+
+# def buildAvgs(row):
+#       score = np.zeros(5)
+#       def buildAvg(note): 
+#             avg[note - 1] += 1
+#       row['overall'].apply(buildAvg)
+
+#       scores.insert(len(scores.columns), row['asin'].iloc[0], score)
 
 def buildScores(row):
       score = np.zeros(5)
@@ -46,6 +56,22 @@ def buildScores(row):
 
 reviewsFiltres.groupby(by=['asin']).apply(buildScores)
 
+
+ # a) 6.##############################
+scoresBoxPlt = scores.transpose().plot(kind='box', 
+        sharex=True,
+        title='Étendue des scores',
+        ylim=(-2,75),
+        rot=0,
+        # grid=True,
+        figsize=(12,8),
+        fontsize=15,
+        color='red'
+        # xlabel='4)'
+        )
+
+plt.show()
+#######################################
 
 scores_np = scores.to_numpy()
 scores_cov_np = np.cov(scores_np)
@@ -141,7 +167,7 @@ cntBas = len(scores[scores < 2.5])
 cntMil = len(scores[(scores > 2.5) & (scores < 3.5)])
 cntHaut = len(scores[scores > 3.5])
 
-xlabels = ['non-apprécié', 'plus-ou-moins', 'appréciés']
+xlabels = ['non-appréciés', 'plus-ou-moins', 'appréciés']
 ylabels = [cntBas, cntMil, cntHaut]
 pd.DataFrame({'xaxis':xlabels,'fréquence':ylabels}).plot.bar(x='xaxis',y='fréquence', rot=0, color='green')
 
