@@ -118,7 +118,7 @@ scores_t.insert(len(scores_t.columns), 'moy_p', moy_p)
 ### Algo from https://math.stackexchange.com/questions/942738/algorithm-to-calculate-rating-based-on-multiple-reviews-using-both-review-score
 # Adapted score
 nbReviewsForEachBook = scores.sum().to_numpy()
-moyNbReviews = np.mean(nbReviewsForEachBook)
+moyNbReviews = np.median(nbReviewsForEachBook)
 Q = -moyNbReviews/np.log(1.0/2.0)
 ponderation = 2.5 * (np.ones_like(nbReviewsForEachBook) - np.exp(-nbReviewsForEachBook/Q))
 adapted_scores = (moy_p * 0.5) + ponderation 
@@ -146,6 +146,7 @@ projection_t.insert(len(projection_t.columns), 'size', np.ones(len(projection_t)
 projection_t.loc[len(projection_t)] = [moy_color.loc['blue']['x'], moy_color.loc['blue']['y'], 'yellow', 50]
 projection_t.loc[len(projection_t)] = [moy_color.loc['red']['x'], moy_color.loc['red']['y'], 'yellow', 50]
 projection_t.loc[len(projection_t)] = [moy_color.loc['green']['x'], moy_color.loc['green']['y'], 'yellow', 50]
+
 
 projection_t.plot.scatter('x', 'y', c='color', s='size')
 
