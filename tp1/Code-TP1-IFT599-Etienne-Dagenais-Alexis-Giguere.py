@@ -154,6 +154,7 @@ projection = pd.DataFrame([], columns=[], index=['x', 'y'])
 
 mean_v = scores.mean(axis=1).to_numpy()
 
+
 def buildProjectionDataFrame(col):
       col_np = col.to_numpy() - mean_v
       x = np.dot(vp1, col_np)
