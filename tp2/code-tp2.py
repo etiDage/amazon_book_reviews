@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import constantes
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
+from sklearn.metrics.pairwise import pairwise_distances as pwdists
 
 
 def get_data_frame():
@@ -122,6 +123,16 @@ def principal_component_projection(features_df):
     features_df.apply(build_projection_df, axis=1)
     projection_t = projection.transpose()
     return projection_t
+
+def build_similarity_matrix(projection_t, distmode='c'):
+    if distmode == 'c':
+        M = pwdists(projection_t['x'], projection_t['y'], metric='cosine', n_jobs=5, force_all_finite=True)
+    else:
+        M = pwdists(projection_t['x'], projection_t['y'], metric='euclidean', n_jobs=5, force_all_finite=True)
+    return M
+
+def decompose_similarity_matrix(sim_matrix):
+    M = np.linalg.svd(sim_matrix)
 
 def main():
     data_f = get_data_frame()
