@@ -5,6 +5,8 @@ import constantes
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
 from sklearn.metrics.pairwise import pairwise_distances as pwdists
+from sklearn.metrics import silhouette_score as silh_sc
+from sklearn.metrics import adjusted_mutual_info_score as mut_info_sc
 
 
 def get_data_frame():
@@ -187,6 +189,24 @@ def main():
     plt.show()
     plt.scatter(M_cos[:,0], M_cos[:,1], c=sim_cos_kmeans.labels_)
     plt.show()
+
+    km_eucl_sil = silh_sc(projection_t['y'], c=kmean_euclidean.labels_)
+    km_eucl_mut = mut_info_sc(projection_t['y'], c=kmean_euclidean.labels_)
+    km_cos_sil = silh_sc(projection_t['y'], c=kmean_cosin.labels_)
+    km_cos_mut = mut_info_sc(projection_t['y'], c=kmean_cosin.labels_)
+
+    spec_eucl_sil = silh_sc(M_euclid[:,1], c=sim_eucl_kmeans.labels_)
+    spec_eucl_mut = mut_info_sc(M_euclid[:,1], c=sim_eucl_kmeans.labels_)
+    spec_cos_sil = silh_sc(M_cos[:,1], c=sim_cos_kmeans.labels_)
+    spec_cos_mut = mut_info_sc( M_cos[:,1], c=sim_cos_kmeans.labels_)
+
+    print(f"DIST EUCLIDIENNE:\n  Silhouet.   Info Mut.\n╔═══════════╦══════════╗\n║ {km_eucl_sil} ║ {km_eucl_mut} ║ \
+╠═══════════╬══════════╣\n║ {spec_eucl_sil} ║ {spec_eucl_mut} ║\
+\n╚═══════════╩══════════╝\n\n\
+COSINUS:\n  Silhouet.   Info Mut.\n\
+╔═══════════╦══════════╗\n║ {km_cos_sil} ║ {km_cos_mut} ║\
+\n╠═══════════╬══════════╣\n║ {spec_cos_sil} ║ {spec_cos_mut} ║\
+\n╚═══════════╩══════════╝")
 
 if __name__ == "__main__":
     main()
