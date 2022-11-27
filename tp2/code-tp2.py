@@ -124,15 +124,27 @@ def principal_component_projection(features_df):
     projection_t = projection.transpose()
     return projection_t
 
-def build_similarity_matrix(projection_t, distmode='c'):
+def build_similarity_matrix(projection_t:pd.DataFrame, distmode='c'):
     if distmode == 'c':
-        M = pwdists(projection_t['x'], projection_t['y'], metric='cosine', n_jobs=5, force_all_finite=True)
+        M = pwdists(projection_t, metric='cosine', n_jobs=5, force_all_finite=True)
     else:
-        M = pwdists(projection_t['x'], projection_t['y'], metric='euclidean', n_jobs=5, force_all_finite=True)
+        M = pwdists(projection_t, metric='euclidean', n_jobs=5, force_all_finite=True)
     return M
 
-def decompose_similarity_matrix(sim_matrix):
-    M = np.linalg.svd(sim_matrix)
+def decompose_similarity_matrix(sim_matrix:np.ndarray):
+    P, D, PDT = np.linalg.svd(sim_matrix)
+    # return np.transpose(PDT)
+    return P*D
+
+def do_kmeans_on_decomp_matrix(decomp_matrix:np.ndarray):
+    # features_matrix = features_df.to_numpy()
+    kmeans = KMeans(n_clusters=3)
+    kmeans.fit(preprocessing.normalize(decomp_matrix))
+    return kmeans
+
+def do_2d_segm(projection_t, useCosine:bool=True):
+    sim_mat = build_similarity_matrix(projection_t, 'c' if useCosine else 'e')
+    return sim_mat, do_kmeans_on_decomp_matrix(decompose_similarity_matrix(sim_mat))
 
 def main():
     data_f = get_data_frame()
@@ -159,9 +171,21 @@ def main():
     print(features_df.mean().to_numpy())
     projection_t = principal_component_projection(features_df)
     print(projection_t)
+    
+    M_euclid, sim_eucl_kmeans = do_2d_segm(projection_t, False)
+    M_cos, sim_cos_kmeans = do_2d_segm(projection_t, True)
+
+    print(M_cos)
+    print(M_euclid)
+
     plt.scatter(projection_t['x'], projection_t['y'], c=kmean_euclidean.labels_)
     plt.show()
     plt.scatter(projection_t['x'], projection_t['y'], c=kmean_cosin.labels_)
+    plt.show()
+
+    plt.scatter(M_euclid[:,0], M_euclid[:,1], c=sim_eucl_kmeans.labels_)
+    plt.show()
+    plt.scatter(M_cos[:,0], M_cos[:,1], c=sim_cos_kmeans.labels_)
     plt.show()
 
 if __name__ == "__main__":
