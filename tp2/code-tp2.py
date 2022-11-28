@@ -148,6 +148,29 @@ def do_2d_segm(projection_t, useCosine:bool=True):
     sim_mat = build_similarity_matrix(projection_t, 'c' if useCosine else 'e')
     return sim_mat, do_kmeans_on_decomp_matrix(decompose_similarity_matrix(sim_mat))
 
+def display_MI_tab(km_eucl_sil, km_eucl_mut, km_cos_sil, km_cos_mut, spec_eucl_sil, spec_eucl_mut, spec_cos_sil, spec_cos_mut):
+    print(f"\tDIST EUCLIDIENNE:\n\
+\t    Silhouet.    Info Mut.  \n\
+\t╔═════════════╦════════════╗\n\
+\t║             ║            ║\n\
+K-Means ║   {km_eucl_sil:3.4f}    ║   {km_eucl_mut:3.4f}    ║\n\
+\t║             ║            ║\n\
+\t╠═════════════╬════════════╣\n\
+Spectr. ║   {spec_eucl_sil:3.4f}    ║   {spec_eucl_mut:3.4f}   ║\n\
+\t║             ║            ║\n\
+\t╚═════════════╩════════════╝\n\n\
+\tCOSINUS:\n\
+\t    Silhouet.    Info Mut.  \n\
+\t╔═════════════╦════════════╗\n\
+\t║             ║            ║\n\
+K-Means ║   {km_cos_sil:3.4f}   ║   {km_cos_mut:3.4f}   ║\n\
+\t║             ║            ║\n\
+\t╠═════════════╬════════════╣\n\
+\t║             ║            ║\n\
+Spectr. ║   {spec_cos_sil:3.4f}    ║   {spec_cos_mut:3.4f}   ║\n\
+\t║             ║            ║\n\
+\t╚═════════════╩════════════╝")
+
 def main():
     data_f = get_data_frame()
     data_f.info()
@@ -190,24 +213,23 @@ def main():
     plt.scatter(M_cos[:,0], M_cos[:,1], c=sim_cos_kmeans.labels_)
     plt.show()
 
+    # Faire le comparatif des clusters en se basant
+    # sur *rel_to_labels* comme verite terrain
+    rel_to_labels = kmean_euclidean.labels_
+
     km_eucl_sil = silh_sc(projection_t, kmean_euclidean.labels_)
-    km_eucl_mut = mut_info_sc(sim_cos_kmeans.labels_, kmean_euclidean.labels_)
+    km_eucl_mut = mut_info_sc(rel_to_labels, kmean_euclidean.labels_)
     km_cos_sil = silh_sc(projection_t, kmean_cosin.labels_)
-    km_cos_mut = mut_info_sc(sim_cos_kmeans.labels_, kmean_cosin.labels_)
+    km_cos_mut = mut_info_sc(rel_to_labels, kmean_cosin.labels_)
 
     spec_eucl_sil = silh_sc(M_euclid[:,0:1], sim_eucl_kmeans.labels_)
-    spec_eucl_mut = mut_info_sc(sim_cos_kmeans.labels_, sim_eucl_kmeans.labels_)
+    spec_eucl_mut = mut_info_sc(rel_to_labels, sim_eucl_kmeans.labels_)
     spec_cos_sil = silh_sc(M_cos[:,0:1], sim_cos_kmeans.labels_)
-    spec_cos_mut = mut_info_sc( sim_cos_kmeans.labels_, sim_cos_kmeans.labels_)
+    spec_cos_mut = mut_info_sc( rel_to_labels, sim_cos_kmeans.labels_)
 
-    print(f"DIST EUCLIDIENNE:\n  Silhouet.   Info Mut.\
-\n╔═══════════╦══════════╗\n║ {km_eucl_sil} ║ {km_eucl_mut} ║ \
-╠═══════════╬══════════╣\n║ {spec_eucl_sil} ║ {spec_eucl_mut} ║\
-\n╚═══════════╩══════════╝\n\n\
-COSINUS:\n  Silhouet.   Info Mut.\n\
-╔═══════════╦══════════╗\n║ {km_cos_sil} ║ {km_cos_mut} ║\
-\n╠═══════════╬══════════╣\n║ {spec_cos_sil} ║ {spec_cos_mut} ║\
-\n╚═══════════╩══════════╝")
+    display_MI_tab(km_eucl_sil, km_eucl_mut, km_cos_sil, km_cos_mut, \
+                   spec_eucl_sil, spec_eucl_mut, spec_cos_sil, spec_cos_mut)
+
 
 if __name__ == "__main__":
     main()
