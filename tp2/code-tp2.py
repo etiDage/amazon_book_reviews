@@ -1,9 +1,11 @@
+import nltk.cluster
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import constantes
 from sklearn.cluster import KMeans
 from sklearn import preprocessing
+from nltk.cluster.kmeans import KMeansClusterer
 
 
 def get_data_frame():
@@ -70,6 +72,7 @@ def score_nb_reviews(scores_t):
     scores_t.insert(len(scores_t.columns), 'nb_review', sum)
 
 
+# From: https://stackoverflow.com/questions/5529625/is-it-possible-to-specify-your-own-distance-function-using-scikit-learn-k-means
 def calculate_kmean_euclidean_dist(features_df):
     features_matrix = features_df.to_numpy()
     kmeans = KMeans(n_clusters=3)
@@ -77,13 +80,23 @@ def calculate_kmean_euclidean_dist(features_df):
     return kmeans
 
 
-def calculate_kmean_cosin_dist(features_df):
+def calculate_kmean_cosin_dist_1(features_df):
     features_matrix = features_df.to_numpy()
     kmeans = KMeans(n_clusters=3)
     kmeans.fit(preprocessing.normalize(features_matrix))
     return kmeans
 
 
+# From: https://stackoverflow.com/questions/46409846/using-k-means-with-cosine-similarity-python
+def calculate_kmean_cosin_dist_2(features_df):
+    nb_cluster = 3
+    data = features_df.to_numpy()
+    kclusterer = KMeansClusterer(nb_cluster, distance=nltk.cluster.cosine_distance, repeats=25)
+    rs = kclusterer.cluster(data, assign_clusters=True)
+    return rs
+
+
+# From: https://www.w3schools.com/python/trypython.asp?filename=demo_ml_k-means2
 def kmean_elbow(features_df):
     features_matrix = features_df.to_numpy()
     inertias = []
@@ -143,14 +156,17 @@ def main():
     add_rev_info_to_scores(scores_t)
     features_df = scores_t.filter(axis=1, items=['med', 'mean', 'rev_nb', 'std', 'good_rev', 'neutral_rev', 'bad_rev'])
     kmean_euclidean = calculate_kmean_euclidean_dist(features_df)
-    kmean_cosin = calculate_kmean_cosin_dist(features_df)
+    kmean_cosin_1 = calculate_kmean_cosin_dist_1(features_df)
+    kmean_cosin_2 = calculate_kmean_cosin_dist_2(features_df)
     # kmean_elbow(features_df)
     print(features_df.mean().to_numpy())
     projection_t = principal_component_projection(features_df)
     print(projection_t)
     plt.scatter(projection_t['x'], projection_t['y'], c=kmean_euclidean.labels_)
     plt.show()
-    plt.scatter(projection_t['x'], projection_t['y'], c=kmean_cosin.labels_)
+    plt.scatter(projection_t['x'], projection_t['y'], c=kmean_cosin_2)
+    plt.show()
+    plt.scatter(projection_t['x'], projection_t['y'], c=kmean_cosin_1.labels_)
     plt.show()
 
 if __name__ == "__main__":
