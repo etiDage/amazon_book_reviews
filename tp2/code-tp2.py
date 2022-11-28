@@ -153,7 +153,7 @@ def display_MI_tab(km_eucl_sil, km_eucl_mut, km_cos_sil, km_cos_mut, spec_eucl_s
 \t    Silhouet.    Info Mut.  \n\
 \t╔═════════════╦════════════╗\n\
 \t║             ║            ║\n\
-K-Means ║   {km_eucl_sil:3.4f}    ║   {km_eucl_mut:3.4f}    ║\n\
+K-Means ║   {km_eucl_sil:3.4f}    ║   {km_eucl_mut:3.4f}   ║\n\
 \t║             ║            ║\n\
 \t╠═════════════╬════════════╣\n\
 Spectr. ║   {spec_eucl_sil:3.4f}    ║   {spec_eucl_mut:3.4f}   ║\n\
@@ -197,8 +197,8 @@ def main():
     projection_t = principal_component_projection(features_df)
     print(projection_t)
     
-    M_euclid, sim_eucl_kmeans = do_2d_segm(projection_t, False)
-    M_cos, sim_cos_kmeans = do_2d_segm(projection_t, True)
+    M_euclid, spt_eucl_kmeans = do_2d_segm(projection_t, False)
+    M_cos, spt_cos_kmeans = do_2d_segm(projection_t, True)
 
     print(M_cos)
     print(M_euclid)
@@ -208,24 +208,24 @@ def main():
     plt.scatter(projection_t['x'], projection_t['y'], c=kmean_cosin.labels_)
     plt.show()
 
-    plt.scatter(M_euclid[:,0], M_euclid[:,1], c=sim_eucl_kmeans.labels_)
+    plt.scatter(M_euclid[:,0], M_euclid[:,1], c=spt_eucl_kmeans.labels_)
     plt.show()
-    plt.scatter(M_cos[:,0], M_cos[:,1], c=sim_cos_kmeans.labels_)
+    plt.scatter(M_cos[:,0], M_cos[:,1], c=spt_cos_kmeans.labels_)
     plt.show()
 
     # Faire le comparatif des clusters en se basant
     # sur *rel_to_labels* comme verite terrain
-    rel_to_labels = kmean_euclidean.labels_
+    rel_to_labels = spt_cos_kmeans.labels_
 
     km_eucl_sil = silh_sc(projection_t, kmean_euclidean.labels_)
     km_eucl_mut = mut_info_sc(rel_to_labels, kmean_euclidean.labels_)
     km_cos_sil = silh_sc(projection_t, kmean_cosin.labels_)
     km_cos_mut = mut_info_sc(rel_to_labels, kmean_cosin.labels_)
 
-    spec_eucl_sil = silh_sc(M_euclid[:,0:1], sim_eucl_kmeans.labels_)
-    spec_eucl_mut = mut_info_sc(rel_to_labels, sim_eucl_kmeans.labels_)
-    spec_cos_sil = silh_sc(M_cos[:,0:1], sim_cos_kmeans.labels_)
-    spec_cos_mut = mut_info_sc( rel_to_labels, sim_cos_kmeans.labels_)
+    spec_eucl_sil = silh_sc(M_euclid[:,0:1], spt_eucl_kmeans.labels_)
+    spec_eucl_mut = mut_info_sc(rel_to_labels, spt_eucl_kmeans.labels_)
+    spec_cos_sil = silh_sc(M_cos[:,0:1], spt_cos_kmeans.labels_)
+    spec_cos_mut = mut_info_sc(rel_to_labels, spt_cos_kmeans.labels_)
 
     display_MI_tab(km_eucl_sil, km_eucl_mut, km_cos_sil, km_cos_mut, \
                    spec_eucl_sil, spec_eucl_mut, spec_cos_sil, spec_cos_mut)
